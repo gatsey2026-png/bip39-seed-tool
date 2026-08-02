@@ -38,4 +38,5 @@ testing/curiosity:
 Randomness source
 This phrase is generated using your browser's built-in crypto.getRandomValues() — a cryptographically secure pseudorandom number generator (CSPRNG) provided by your operating system. It's the same class of random number generator that underlies HTTPS/TLS security across the web, and is a well-audited, standard source suitable for generating cryptocurrency keys.
 
-
+Optional: add physical dice
+CSPRNG is already cryptographically secure on its own — dice are entirely optional. Their purpose is independence: if you'd rather not have to trust this specific device's random number generator alone (for example, on a machine you're not sure is clean, or if you just want a second, physically-verifiable source of randomness you control yourself), roll physical dice and enter the results below. They get combined with the CSPRNG output by hashing both together, so the result is never weaker than the CSPRNG alone — only ever stronger.
