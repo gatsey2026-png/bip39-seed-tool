@@ -7,7 +7,7 @@ Keccak-256, RIPEMD-160, Base58Check, Bech32) is implemented from scratch in
 `index.html` and validated against official test vectors.
 
 **Live version:** 
-https://github.com/gatsey2026-png/bip39-seed-tool
+https://gatsey2026-png.github.io/bip39-seed-tool/
 
 ## Using this safely
 
