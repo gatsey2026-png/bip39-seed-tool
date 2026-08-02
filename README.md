@@ -6,8 +6,8 @@ no CDNs, no network requests of any kind — everything (BIP-39, secp256k1,
 Keccak-256, RIPEMD-160, Base58Check, Bech32) is implemented from scratch in
 `index.html` and validated against official test vectors.
 
-**Live version:** `https://<your-username>.github.io/<repo-name>/`
-(replace with your actual GitHub Pages URL after enabling Pages — see below)
+**Live version:** 
+
 
 ## Using this safely
 
@@ -34,7 +34,7 @@ testing/curiosity:
 4. Under **Branch**, choose `main` and `/ (root)`, then **Save**.
 5. Wait a minute or two — your live URL will appear at the top of that same
    Pages settings screen, in the form
-   `https://<your-username>.github.io/<repo-name>/`.
+   
 
 No GitHub Actions workflow is needed — this is a single static HTML file,
 so GitHub serves it directly.
