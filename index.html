@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIP-39 Seed Tool by Gatesy</title>
+<style>
+  :root{
+    --bg:#0d1210;
+    --panel:#151b19;
+    --panel-2:#1b2320;
+    --line:#2a332f;
+    --text:#dce7e1;
+    --muted:#8aa298;
+    --accent:#c99a3d;
+    --accent-2:#7fb69a;
+    --danger:#d16c5a;
+    --danger-bg:#2a1815;
+    --ok:#7fb69a;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(127,182,154,0.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.5;
+    min-height:100vh;
+    padding:24px 16px 80px;
+  }
+  .wrap{max-width:780px;margin:0 auto;}
+  header{margin-bottom:28px;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+    margin-bottom:8px;
+  }
+  h1{
+    font-size:26px;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+    font-weight:650;
+  }
+  .sub{color:var(--muted);font-size:14.5px;max-width:60ch;}
+
+  .offline-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:11px;color:var(--ok);
+    border:1px solid rgba(127,182,154,0.35);
+    background:rgba(127,182,154,0.08);
+    padding:3px 9px;border-radius:20px;margin-top:12px;
+  }
+  .offline-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+
+  nav.tabs{
+    display:flex;gap:2px;margin:28px 0 0;
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    appearance:none;border:none;background:transparent;color:var(--muted);
+    font-family:var(--sans);font-size:14px;font-weight:600;
+    padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent;
+    margin-bottom:-1px;transition:color .15s;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  section.pane{display:none;padding-top:24px;}
+  section.pane.active{display:block;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 22px;
+    margin-bottom:16px;
+  }
+  .card h2{font-size:15px;margin:0 0 4px;font-weight:650;}
+  .card .hint{color:var(--muted);font-size:13px;margin:0 0 14px;}
+
+  label.field{display:block;margin-bottom:14px;}
+  label.field .lbl{
+    display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;
+    font-family:var(--mono);letter-spacing:.02em;
+  }
+  select, input[type=text], input[type=password], textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text);border-radius:6px;padding:9px 11px;font-size:14px;
+    font-family:var(--sans);
+  }
+  textarea{font-family:var(--mono);resize:vertical;min-height:80px;}
+
+  .pw-wrap{display:flex;gap:8px;}
+  .pw-wrap input{flex:1;}
+  .pw-toggle{
+    appearance:none;flex-shrink:0;border:1px solid var(--line);background:var(--panel-2);
+    color:var(--muted);font-family:var(--sans);font-size:12.5px;font-weight:600;
+    padding:0 12px;border-radius:6px;cursor:pointer;white-space:nowrap;
+  }
+  .pw-toggle:hover{border-color:var(--accent-2);color:var(--accent-2);}
+
+  select:focus,input:focus,textarea:focus,button:focus-visible{
+    outline:2px solid var(--accent-2);outline-offset:1px;
+  }
+
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .row > label.field{flex:1;min-width:180px;}
+
+  button.btn{
+    appearance:none;border:1px solid var(--accent);
+    background:var(--accent);color:#1a1508;font-weight:700;font-size:14px;
+    padding:10px 18px;border-radius:7px;cursor:pointer;
+  }
+  button.btn:hover{filter:brightness(1.08);}
+  button.btn.secondary{
+    background:transparent;color:var(--text);border-color:var(--line);
+    font-weight:600;
+  }
+  button.btn.secondary:hover{border-color:var(--accent-2);color:var(--accent-2);}
+  button.btn.small{padding:5px 10px;font-size:12px;border-radius:5px;}
+  button.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  .wordgrid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+    gap:8px;margin:14px 0;
+  }
+  .wordgrid .w{
+    font-family:var(--mono);font-size:13.5px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+    display:flex;gap:7px;
+  }
+  .wordgrid .w .i{color:var(--muted);min-width:1.6em;text-align:right;}
+  .wordgrid .w.masked{color:var(--muted);letter-spacing:2px;user-select:none;}
+
+  .banner{
+    border-radius:8px;padding:12px 14px;font-size:13.5px;margin:14px 0;
+    display:flex;gap:10px;align-items:flex-start;
+  }
+  .banner.warn{background:var(--danger-bg);border:1px solid rgba(209,108,90,0.4);color:#f0b6a8;}
+  .banner.ok{background:rgba(127,182,154,0.08);border:1px solid rgba(127,182,154,0.4);color:var(--ok);}
+  .banner .icon{font-family:var(--mono);flex-shrink:0;}
+
+  code.inline{font-family:var(--mono);background:var(--panel-2);padding:1px 5px;border-radius:4px;font-size:0.92em;}
+
+  footer{margin-top:36px;color:var(--muted);font-size:12px;text-align:center;}
+  footer a{color:var(--accent-2);}
+
+  .diag{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-all;}
+  .mnemonic-text{
+    font-family:var(--mono);font-size:13.5px;line-height:1.7;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
+    padding:10px 12px;word-spacing:4px;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    section.pane.active{animation:fadeIn .18s ease;}
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(2px);}to{opacity:1;transform:none;}}
+
+  /* ---- Disclaimer modal ---- */
+  #disclaimer-overlay{
+    position:fixed;inset:0;z-index:1000;
+    background:rgba(6,9,8,0.94);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  #disclaimer-box{
+    max-width:640px;width:100%;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    max-height:88vh;overflow-y:auto;
+  }
+  #disclaimer-box h2{margin:0 0 4px;font-size:17px;}
+  #disclaimer-box .disclaimer-eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--danger);margin-bottom:10px;
+  }
+  #disclaimer-box .legal-text{
+    font-family:var(--mono);font-size:12px;line-height:1.65;color:var(--muted);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+    padding:14px 16px;margin:14px 0;max-height:220px;overflow-y:auto;
+  }
+  #disclaimer-box p{font-size:14px;color:var(--text);line-height:1.6;}
+  #disclaimer-agree-row{display:flex;align-items:center;gap:10px;margin:16px 0 18px;}
+  #disclaimer-agree-row label{font-size:13.5px;color:var(--text);cursor:pointer;user-select:none;}
+  #disclaimer-agree-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;}
+  #disclaimer-continue{width:100%;}
+  body.disclaimer-pending .app-content{display:none;}
+
+  /* ---- Buy me a coffee ---- */
+  .coffee-callout{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg, rgba(201,154,61,0.12), rgba(201,154,61,0.04));
+    border:1px solid rgba(201,154,61,0.35);border-radius:10px;
+    padding:14px 18px;margin-bottom:16px;
+  }
+  .coffee-callout .cup{font-size:26px;line-height:1;flex-shrink:0;}
+  .coffee-callout .txt{flex:1;font-size:13.5px;color:var(--text);}
+  .coffee-callout .txt b{color:var(--accent);}
+  .coffee-link{
+    display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+    background:var(--accent);color:#1a1508;font-weight:700;font-size:13px;
+    padding:8px 14px;border-radius:7px;text-decoration:none;white-space:nowrap;
+  }
+  .coffee-link:hover{filter:brightness(1.08);}
+  footer .coffee-footer-link{color:var(--accent-2);text-decoration:none;font-weight:600;}
+  footer .coffee-footer-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body class="disclaimer-pending">
+
+<div id="disclaimer-overlay">
+  <div id="disclaimer-box">
+    <div class="disclaimer-eyebrow">Before you continue</div>
+    <h2>No warranty. Use at your own risk.</h2>
+    <p>This tool generates and checks real cryptocurrency seed phrases. Read this every time &mdash; it doesn't get remembered between runs.</p>
+    <div class="legal-text">DISCLAIMER OF WARRANTY. THIS SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR(S) OR COPYRIGHT HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE &mdash; INCLUDING, WITHOUT LIMITATION, ANY LOSS OF FUNDS, LOSS OF ACCESS TO A WALLET, OR LOSS OF DATA RESULTING FROM THE GENERATION, DISPLAY, STORAGE, TRANSCRIPTION, OR RECOVERY OF ANY SEED PHRASE, PASSPHRASE, PRIVATE KEY, OR ADDRESS PRODUCED BY THIS SOFTWARE. YOU ARE SOLELY RESPONSIBLE FOR VERIFYING THIS SOFTWARE'S SUITABILITY FOR YOUR PURPOSE, FOR SECURING ANY OUTPUT IT PRODUCES, AND FOR TESTING RECOVERY BEFORE RELYING ON ANY BACKUP IT CREATES.</div>
+    <p style="color:var(--muted);font-size:13px;margin-top:-6px;">This is not financial, legal, or security advice, and the author is not liable for how you use this tool or for any outcome of that use.</p>
+    <div id="disclaimer-agree-row">
+      <input type="checkbox" id="disclaimer-checkbox">
+      <label for="disclaimer-checkbox">I have read this, understand there is no warranty of any kind, and accept full responsibility for my use of this tool.</label>
+    </div>
+    <button class="btn" id="disclaimer-continue" disabled>Continue</button>
+  </div>
+</div>
+
+<div class="wrap app-content">
+
+  <header>
+    <div class="eyebrow">Air-gapped &middot; No network &middot; No telemetry</div>
+    <h1>BIP-39 Seed Tool <span style="color:var(--muted);font-weight:500;font-size:0.55em;">by Gatesy</span></h1>
+    <p class="sub">Generates and checks standard BIP-39 recovery phrases entirely in your browser. Nothing here ever leaves this page.</p>
+    <span class="offline-badge"><span class="dot"></span> Zero external requests &mdash; safe to use disconnected from the internet</span>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="generate" class="active">Generate</button>
+    <button data-tab="test">Test / Verify</button>
+    <button data-tab="about">About &amp; Security Notes</button>
+  </nav>
+
+  <!-- ============ GENERATE TAB ============ -->
+  <section class="pane active" id="pane-generate">
+
+    <div class="card">
+      <h2>Randomness source</h2>
+      <p class="hint" style="margin-bottom:0;">
+        This phrase is generated using your browser's built-in <code class="inline">crypto.getRandomValues()</code>
+        &mdash; a cryptographically secure pseudorandom number generator (CSPRNG) provided by your operating
+        system. It's the same class of random number generator that underlies HTTPS/TLS security across the web,
+        and is a well-audited, standard source suitable for generating cryptocurrency keys.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Optional: add physical dice</h2>
+      <p class="hint">
+        <b>What this is for:</b> the CSPRNG above is already cryptographically secure on its own &mdash;
+        dice are entirely optional. Their purpose is <b>independence</b>: if you'd rather not have to trust
+        this specific device's random number generator alone (for example, on a machine you're not sure is
+        clean, or if you just want a second, physically-verifiable source of randomness you control yourself),
+        roll physical dice and enter the results below. They get combined with the CSPRNG output by hashing
+        both together, so the result is never weaker than the CSPRNG alone &mdash; only ever stronger.
+        Leave this blank if you're happy trusting the CSPRNG by itself.
+      </p>
+      <label class="field">
+        <span class="lbl">DICE ROLLS (OPTIONAL, DIGITS 1&ndash;6)</span>
+        <input type="text" id="bip39-dice" placeholder="e.g. 61532446... (the more rolls, the better)">
+      </label>
+      <div class="diag" id="bip39-dice-info"></div>
+    </div>
+
+    <div class="card">
+      <h2>Optional: passphrase</h2>
+      <p class="hint">
+        <b>What this is for:</b> an optional extra secret &mdash; sometimes called the "25th word" &mdash;
+        added on top of your 12/24-word phrase. It creates a separate hidden wallet: the exact same words
+        combined with a <em>different</em> passphrase (including a blank one) produce a completely different,
+        unrelated wallet address. Anyone who finds your written-down words alone cannot access a
+        passphrase-protected wallet without also knowing the passphrase.
+      </p>
+      <div class="banner warn" style="margin-top:0;">
+        <span class="icon">!</span>
+        <span>
+          The passphrase is <b>case-sensitive</b> and must be entered <b>exactly</b> the same way every single
+          time &mdash; including spaces, punctuation, and special characters. There is no way for this tool (or
+          any wallet) to tell you if you've mistyped it: get it even slightly wrong during recovery and you will
+          silently land on a different, wrong wallet with no error message. If you set a passphrase and later
+          forget or mistype it, any funds in that wallet are permanently unreachable, even with your 12/24 words
+          intact. Leave this blank if you don't specifically want this feature.
+        </span>
+      </div>
+      <label class="field">
+        <span class="lbl">PASSPHRASE (OPTIONAL)</span>
+        <div class="pw-wrap">
+          <input type="password" id="bip39-passphrase" placeholder="Leave blank unless you specifically want one">
+          <button type="button" class="pw-toggle" data-pw-toggle="bip39-passphrase">Show</button>
+        </div>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>Generate</h2>
+      <div class="row">
+        <label class="field">
+          <span class="lbl">PHRASE LENGTH</span>
+          <select id="bip39-strength">
+            <option value="128">12 words (128-bit)</option>
+            <option value="256" selected>24 words (256-bit)</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn" id="bip39-generate">Generate BIP-39 Phrase</button>
+    </div>
+
+    <div class="card" id="bip39-result" style="display:none;">
+      <h2>Your recovery phrase</h2>
+      <p class="hint" style="margin-top:-4px;">Hidden by default. Make sure no one can see your screen before revealing it.</p>
+      <div class="wordgrid" id="bip39-words"></div>
+      <button class="btn secondary small" id="bip39-reveal-toggle">Reveal words</button>
+      <div class="banner ok" id="bip39-selfcheck" style="margin-top:14px;"></div>
+      <p class="hint" style="margin:6px 0 0;">There is deliberately no "copy" button for these words or for any private key in this tool &mdash; only the derived public address below can be copied. This avoids your seed ever touching the clipboard, where other apps could read it.</p>
+    </div>
+
+    <div class="card" id="bip39-eth-card" style="display:none;">
+      <h2>Derive an Ethereum (EVM) address</h2>
+      <p class="hint">Standard path <code class="inline">m/44'/60'/0'/0/{account index}</code> &mdash; the same derivation MetaMask, Hardhat, and other Ethereum/EVM wallets use. Uses the passphrase entered above, if any.</p>
+      <label class="field" style="max-width:160px;">
+        <span class="lbl">ACCOUNT INDEX</span>
+        <input type="text" inputmode="numeric" id="bip39-eth-index" value="0">
+      </label>
+      <button class="btn secondary" id="bip39-eth-derive">Derive Address</button>
+      <div id="bip39-eth-result"></div>
+    </div>
+
+    <div class="card" id="bip39-btc-card" style="display:none;">
+      <h2>Derive a Bitcoin (BTC) address</h2>
+      <p class="hint">Native SegWit uses path <code class="inline">m/84'/0'/0'/0/{account index}</code> (bech32, <code class="inline">bc1...</code>) &mdash; the current default for Electrum, Trezor, Ledger and most modern wallets. Legacy uses <code class="inline">m/44'/0'/0'/0/{account index}</code> (<code class="inline">1...</code>). Uses the passphrase entered above, if any.</p>
+      <div class="row">
+        <label class="field">
+          <span class="lbl">ADDRESS TYPE</span>
+          <select id="bip39-btc-type">
+            <option value="segwit" selected>Native SegWit (bech32, bc1...)</option>
+            <option value="legacy">Legacy (P2PKH, 1...)</option>
+          </select>
+        </label>
+        <label class="field" style="max-width:160px;">
+          <span class="lbl">ACCOUNT INDEX</span>
+          <input type="text" inputmode="numeric" id="bip39-btc-index" value="0">
+        </label>
+      </div>
+      <button class="btn secondary" id="bip39-btc-derive">Derive Address</button>
+      <div id="bip39-btc-result"></div>
+    </div>
+  </section>
+
+  <!-- ============ TEST / VERIFY TAB ============ -->
+  <section class="pane" id="pane-test">
+    <div class="card">
+      <h2>Test a phrase &amp; check its addresses</h2>
+      <p class="hint">
+        Paste a BIP-39 phrase back in (yours, or one from another wallet) to confirm its checksum is valid,
+        and derive its Ethereum/EVM and Bitcoin addresses so you can cross-check them against what your wallet
+        app shows. This is a good way to confirm you wrote your words down correctly <em>before</em> you rely
+        on them &mdash; generate a phrase, note the addresses it produces, then paste the same words in here
+        and confirm you get the same addresses back.
+      </p>
+      <label class="field">
+        <span class="lbl">BIP-39 PHRASE</span>
+        <textarea id="test-bip39-input" placeholder="word1 word2 word3 ..."></textarea>
+      </label>
+      <div class="row">
+        <label class="field">
+          <span class="lbl">PASSPHRASE (IF ONE WAS USED)</span>
+          <div class="pw-wrap">
+            <input type="password" id="test-bip39-passphrase">
+            <button type="button" class="pw-toggle" data-pw-toggle="test-bip39-passphrase">Show</button>
+          </div>
+        </label>
+        <label class="field" style="max-width:160px;">
+          <span class="lbl">ACCOUNT INDEX</span>
+          <input type="text" inputmode="numeric" id="test-bip39-eth-index" value="0">
+        </label>
+        <label class="field">
+          <span class="lbl">BTC ADDRESS TYPE</span>
+          <select id="test-bip39-btc-type">
+            <option value="segwit" selected>Native SegWit (bc1...)</option>
+            <option value="legacy">Legacy (1...)</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn" id="test-bip39-btn">Check phrase &amp; derive addresses</button>
+      <div id="test-bip39-result"></div>
+      <p class="hint" style="margin:14px 0 2px;font-weight:600;color:var(--text);">Ethereum (EVM)</p>
+      <div id="test-bip39-eth-result"></div>
+      <p class="hint" style="margin:14px 0 2px;font-weight:600;color:var(--text);">Bitcoin</p>
+      <div id="test-bip39-btc-result"></div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT TAB ============ -->
+  <section class="pane" id="pane-about">
+    <div class="coffee-callout">
+      <span class="cup">&#9749;</span>
+      <span class="txt">Built and maintained by <b>Gatesy</b>. If this tool saved you the trouble of trusting a random website with your seed phrase, consider buying a coffee.</span>
+      <a class="coffee-link" href="https://buymeacoffee.com/gatesy" target="_blank" rel="noopener noreferrer">&#9749; Buy me a coffee</a>
+    </div>
+
+    <div class="card">
+      <h2>What this tool does</h2>
+      <p class="hint" style="margin-bottom:0;">
+        This page implements <b>BIP-39</b> (the standard 2048-word mnemonic scheme) directly in JavaScript,
+        using your browser's built-in <code class="inline">crypto.getRandomValues</code> and
+        <code class="inline">crypto.subtle</code> (Web Crypto) for all randomness, hashing and PBKDF2 &mdash;
+        plus from-scratch, independently-verified implementations of secp256k1, Keccak-256, RIPEMD-160,
+        Base58Check and Bech32 to derive Ethereum/EVM and Bitcoin addresses (browsers don't have any of
+        these built in). No external libraries, no CDNs, no network requests of any kind. The BIP-39 word
+        list (2048 words) is the exact, verified standard list, embedded directly in this file.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Security notes</h2>
+      <ul class="hint" style="margin:0;padding-left:18px;">
+        <li>Run this from a local file (or an air-gapped machine) for real use &mdash; do not enter a real phrase into a copy of this page loaded from a server you don't control. If you're using a copy hosted on GitHub Pages (or similar) that you or someone you trust controls, that's safer than an unknown third-party site, but downloading the file and opening it locally (or disconnecting from the internet after the page loads) remains the most cautious option for real funds.</li>
+        <li>This tool cannot verify itself against tampering. If you didn't get this file from a source you trust, treat its output with suspicion and cross-check with another independent implementation before trusting it with real funds.</li>
+        <li>There is deliberately no clipboard-copy function for seed words or private keys anywhere in this tool &mdash; only the derived public address can be copied. This is a one-way door: don't work around it by manually selecting and copying the words yourself if you're trying to keep them off the clipboard.</li>
+        <li>Words are hidden by default and only shown after you click "Reveal" &mdash; make sure your screen isn't visible to anyone else, and isn't being recorded or screen-shared, before revealing.</li>
+        <li>Every phrase generated here is checked against its own checksum before being shown to you &mdash; but this is not a substitute for testing recovery in a real wallet before relying on a backup.</li>
+        <li>The Ethereum address feature derives at the standard <code class="inline">m/44'/60'/0'/0/{account index}</code> path used by MetaMask and most Ethereum/EVM tooling. The Bitcoin address feature derives Native SegWit at <code class="inline">m/84'/0'/0'/0/{account index}</code> (today's default in Electrum, Trezor, Ledger and most wallets) or Legacy at <code class="inline">m/44'/0'/0'/0/{account index}</code>. Both were verified against official BIP test vectors (Ethereum: the well-known Hardhat/Foundry test mnemonic; Bitcoin: the official BIP-84 test vector and an independent BIP-32 test vector) before being included here.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Offline tool &middot; BIP-39 wordlist per bitcoin/bips &middot; by Gatesy &middot; <a class="coffee-footer-link" href="https://buymeacoffee.com/gatesy" target="_blank" rel="noopener noreferrer">&#9749; Buy me a coffee</a>
+  </footer>
+</div>
+
+<script>
+const BIP39_WORDS = "abandon ability able about above absent absorb abstract absurd abuse access accident account accuse achieve acid acoustic acquire across act action actor actress actual adapt add addict address adjust admit adult advance advice aerobic affair afford afraid again age agent agree ahead aim air airport aisle alarm album alcohol alert alien all alley allow almost alone alpha already also alter always amateur amazing among amount amused analyst anchor ancient anger angle angry animal ankle announce annual another answer antenna antique anxiety any apart apology appear apple approve april arch arctic area arena argue arm armed armor army around arrange arrest arrive arrow art artefact artist artwork ask aspect assault asset assist assume asthma athlete atom attack attend attitude attract auction audit august aunt author auto autumn average avocado avoid awake aware away awesome awful awkward axis baby bachelor bacon badge bag balance balcony ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion custom cute cycle dad damage damp dance danger daring dash daughter dawn day deal debate debris decade december decide decline decorate decrease deer defense define defy degree delay deliver demand demise denial dentist deny depart depend deposit depth deputy derive describe desert design desk despair destroy detail detect develop device devote diagram dial diamond diary dice diesel diet differ digital dignity dilemma dinner dinosaur direct dirt disagree discover disease dish dismiss disorder display distance divert divide divorce dizzy doctor document dog doll dolphin domain donate donkey donor door dose double dove draft dragon drama drastic draw dream dress drift drill drink drip drive drop drum dry duck dumb dune during dust dutch duty dwarf dynamic eager eagle early earn earth easily east easy echo ecology economy edge edit educate effort egg eight either elbow elder electric elegant element elephant elevator elite else embark embody embrace emerge emotion employ empower empty enable enact end endless endorse enemy energy enforce engage engine enhance enjoy enlist enough enrich enroll ensure enter entire entry envelope episode equal equip era erase erode erosion error erupt escape essay essence estate eternal ethics evidence evil evoke evolve exact example excess exchange excite exclude excuse execute exercise exhaust exhibit exile exist exit exotic expand expect expire explain expose express extend extra eye eyebrow fabric face faculty fade faint faith fall false fame family famous fan fancy fantasy farm fashion fat fatal father fatigue fault favorite feature february federal fee feed feel female fence festival fetch fever few fiber fiction field figure file film filter final find fine finger finish fire firm first fiscal fish fit fitness fix flag flame flash flat flavor flee flight flip float flock floor flower fluid flush fly foam focus fog foil fold follow food foot force forest forget fork fortune forum forward fossil foster found fox fragile frame frequent fresh friend fringe frog front frost frown frozen fruit fuel fun funny furnace fury future gadget gain galaxy gallery game gap garage garbage garden garlic garment gas gasp gate gather gauge gaze general genius genre gentle genuine gesture ghost giant gift giggle ginger giraffe girl give glad glance glare glass glide glimpse globe gloom glory glove glow glue goat goddess gold good goose gorilla gospel gossip govern gown grab grace grain grant grape grass gravity great green grid grief grit grocery group grow grunt guard guess guide guilt guitar gun gym habit hair half hammer hamster hand happy harbor hard harsh harvest hat have hawk hazard head health heart heavy hedgehog height hello helmet help hen hero hidden high hill hint hip hire history hobby hockey hold hole holiday hollow home honey hood hope horn horror horse hospital host hotel hour hover hub huge human humble humor hundred hungry hunt hurdle hurry hurt husband hybrid ice icon idea identify idle ignore ill illegal illness image imitate immense immune impact impose improve impulse inch include income increase index indicate indoor industry infant inflict inform inhale inherit initial inject injury inmate inner innocent input inquiry insane insect inside inspire install intact interest into invest invite involve iron island isolate issue item ivory jacket jaguar jar jazz jealous jeans jelly jewel job join joke journey joy judge juice jump jungle junior junk just kangaroo keen keep ketchup key kick kid kidney kind kingdom kiss kit kitchen kite kitten kiwi knee knife knock know lab label labor ladder lady lake lamp language laptop large later latin laugh laundry lava law lawn lawsuit layer lazy leader leaf learn leave lecture left leg legal legend leisure lemon lend length lens leopard lesson letter level liar liberty library license life lift light like limb limit link lion liquid list little live lizard load loan lobster local lock logic lonely long loop lottery loud lounge love loyal lucky luggage lumber lunar lunch luxury lyrics machine mad magic magnet maid mail main major make mammal man manage mandate mango mansion manual maple marble march margin marine market marriage mask mass master match material math matrix matter maximum maze meadow mean measure meat mechanic medal media melody melt member memory mention menu mercy merge merit merry mesh message metal method middle midnight milk million mimic mind minimum minor minute miracle mirror misery miss mistake mix mixed mixture mobile model modify mom moment monitor monkey monster month moon moral more morning mosquito mother motion motor mountain mouse move movie much muffin mule multiply muscle museum mushroom music must mutual myself mystery myth naive name napkin narrow nasty nation nature near neck need negative neglect neither nephew nerve nest net network neutral never news next nice night noble noise nominee noodle normal north nose notable note nothing notice novel now nuclear number nurse nut oak obey object oblige obscure observe obtain obvious occur ocean october odor off offer office often oil okay old olive olympic omit once one onion online only open opera opinion oppose option orange orbit orchard order ordinary organ orient original orphan ostrich other outdoor outer output outside oval oven over own owner oxygen oyster ozone pact paddle page pair palace palm panda panel panic panther paper parade parent park parrot party pass patch path patient patrol pattern pause pave payment peace peanut pear peasant pelican pen penalty pencil people pepper perfect permit person pet phone photo phrase physical piano picnic picture piece pig pigeon pill pilot pink pioneer pipe pistol pitch pizza place planet plastic plate play please pledge pluck plug plunge poem poet point polar pole police pond pony pool popular portion position possible post potato pottery poverty powder power practice praise predict prefer prepare present pretty prevent price pride primary print priority prison private prize problem process produce profit program project promote proof property prosper protect proud provide public pudding pull pulp pulse pumpkin punch pupil puppy purchase purity purpose purse push put puzzle pyramid quality quantum quarter question quick quit quiz quote rabbit raccoon race rack radar radio rail rain raise rally ramp ranch random range rapid rare rate rather raven raw razor ready real reason rebel rebuild recall receive recipe record recycle reduce reflect reform refuse region regret regular reject relax release relief rely remain remember remind remove render renew rent reopen repair repeat replace report require rescue resemble resist resource response result retire retreat return reunion reveal review reward rhythm rib ribbon rice rich ride ridge rifle right rigid ring riot ripple risk ritual rival river road roast robot robust rocket romance roof rookie room rose rotate rough round route royal rubber rude rug rule run runway rural sad saddle sadness safe sail salad salmon salon salt salute same sample sand satisfy satoshi sauce sausage save say scale scan scare scatter scene scheme school science scissors scorpion scout scrap screen script scrub sea search season seat second secret section security seed seek segment select sell seminar senior sense sentence series service session settle setup seven shadow shaft shallow share shed shell sheriff shield shift shine ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shuffle shy sibling sick side siege sight sign silent silk silly silver similar simple since sing siren sister situate six size skate sketch ski skill skin skirt skull slab slam sleep slender slice slide slight slim slogan slot slow slush small smart smile smoke smooth snack snake snap sniff snow soap soccer social sock soda soft solar soldier solid solution solve someone song soon sorry sort soul sound soup source south space spare spatial spawn speak special speed spell spend sphere spice spider spike spin spirit split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stadium staff stage stairs stamp stand start state stay steak steel stem step stereo stick still sting stock stomach stone stool story stove strategy street strike strong struggle student stuff stumble style subject submit subway success such sudden suffer sugar suggest suit summer sun sunny sunset super supply supreme sure surface surge surprise surround survey suspect sustain swallow swamp swap swarm swear sweet swift swim swing switch sword symbol symptom syrup system table tackle tag tail talent talk tank tape target task taste tattoo taxi teach team tell ten tenant tennis tent term test text thank that theme then theory there they thing this thought three thrive throw thumb thunder ticket tide tiger tilt timber time tiny tip tired tissue title toast tobacco today toddler toe together toilet token tomato tomorrow tone tongue tonight tool tooth top topic topple torch tornado tortoise toss total tourist toward tower town toy track trade traffic tragic train transfer trap trash travel tray treat tree trend trial tribe trick trigger trim trip trophy trouble truck true truly trumpet trust truth try tube tuition tumble tuna tunnel turkey turn turtle twelve twenty twice twin twist two type typical ugly umbrella unable unaware uncle uncover under undo unfair unfold unhappy uniform unique unit universe unknown unlock until unusual unveil update upgrade uphold upon upper upset urban urge usage use used useful useless usual utility vacant vacuum vague valid valley valve van vanish vapor various vast vault vehicle velvet vendor venture venue verb verify version very vessel veteran viable vibrant vicious victory video view village vintage violin virtual virus visa visit visual vital vivid vocal voice void volcano volume vote voyage wage wagon wait walk wall walnut want warfare warm warrior wash wasp waste water wave way wealth weapon wear weasel weather web wedding weekend weird welcome west wet whale what wheat wheel when where whip whisper wide width wife wild will win window wine wing wink winner winter wire wisdom wise wish witness wolf woman wonder wood wool word work world worry worth wrap wreck wrestle wrist write wrong yard year yellow you young youth zebra zero zone zoo".split(' ');
+(function(){
+'use strict';
+
+/* ============================================================
+   Small helpers
+   ============================================================ */
+function concatBytes(...arrs) {
+  const len = arrs.reduce((s, a) => s + a.length, 0);
+  const out = new Uint8Array(len);
+  let off = 0;
+  for (const a of arrs) { out.set(a, off); off += a.length; }
+  return out;
+}
+function bytesToHex(bytes) {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function randomBytes(n) {
+  const arr = new Uint8Array(n);
+  crypto.getRandomValues(arr);
+  return arr;
+}
+async function sha256(bytes) {
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+}
+
+/* ============================================================
+   BIP-39
+   ============================================================ */
+function intToBits(value, nbits) { return value.toString(2).padStart(nbits, '0'); }
+function bytesToBits(bytes) { let s = ''; for (const b of bytes) s += b.toString(2).padStart(8, '0'); return s; }
+function bitsToBytes(bits) {
+  if (bits.length % 8 !== 0) throw new Error('bit length not a multiple of 8');
+  const out = new Uint8Array(bits.length / 8);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
+  return out;
+}
+
+async function bip39EntropyToMnemonic(entropyBytes) {
+  const entBits = entropyBytes.length * 8;
+  const checksumBits = entBits / 32;
+  const hash = await sha256(entropyBytes);
+  const hashBits = bytesToBits(hash);
+  const bits = bytesToBits(entropyBytes) + hashBits.slice(0, checksumBits);
+  const words = [];
+  for (let i = 0; i < bits.length / 11; i++) {
+    const idx = parseInt(bits.slice(i * 11, i * 11 + 11), 2);
+    words.push(BIP39_WORDS[idx]);
+  }
+  return words;
+}
+async function bip39ValidateMnemonic(words) {
+  const idxs = [];
+  for (const w of words) {
+    const i = BIP39_INDEX.get(w);
+    if (i === undefined) return { valid: false, reason: 'word not in the BIP-39 wordlist: "' + w + '"' };
+    idxs.push(i);
+  }
+  if (![12, 24].includes(idxs.length)) {
+    return { valid: false, reason: 'this tool only generates/checks 12 or 24-word phrases (got ' + idxs.length + ' words)' };
+  }
+  let bits = '';
+  for (const i of idxs) bits += intToBits(i, 11);
+  const totalBits = bits.length;
+  const checksumBits = totalBits / 33;
+  const entBits = totalBits - checksumBits;
+  const entropyBitStr = bits.slice(0, entBits);
+  const checksumBitStr = bits.slice(entBits);
+  const entropyBytes = bitsToBytes(entropyBitStr);
+  const hash = await sha256(entropyBytes);
+  const hashBits = bytesToBits(hash);
+  const expectedChecksum = hashBits.slice(0, checksumBits);
+  const valid = expectedChecksum === checksumBitStr;
+  return { valid, entropyHex: bytesToHex(entropyBytes), reason: valid ? null : 'checksum does not match \u2014 a word is likely wrong or out of order' };
+}
+
+async function bip39MnemonicToSeed(mnemonicWords, passphraseStr) {
+  const mnemonicNorm = mnemonicWords.join(' ').normalize('NFKD');
+  const saltNorm = ('mnemonic' + (passphraseStr || '')).normalize('NFKD');
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(mnemonicNorm), { name: 'PBKDF2' }, false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-512', salt: enc.encode(saltNorm), iterations: 2048 },
+    keyMaterial,
+    64 * 8
+  );
+  return new Uint8Array(bits);
+}
+
+async function combinedEntropy(byteLength, diceDigits) {
+  const csprng = randomBytes(byteLength);
+  if (!diceDigits) return csprng;
+  const diceBytes = new TextEncoder().encode(diceDigits);
+  const hashed = await sha256(concatBytes(csprng, diceBytes));
+  return hashed.slice(0, byteLength);
+}
+
+/* ============================================================
+   Keccak-256 (Ethereum's hash -- original Keccak padding 0x01,
+   NOT NIST SHA3's 0x06). Pure JS, BigInt-based, no dependencies.
+   Verified against known test vectors: keccak256("") and keccak256([0x12,0x34]).
+   ============================================================ */
+const KECCAK_MASK64 = (1n << 64n) - 1n;
+function keccakRotl64(x, n) {
+  n = BigInt(n) % 64n;
+  if (n === 0n) return x & KECCAK_MASK64;
+  return ((x << n) | (x >> (64n - n))) & KECCAK_MASK64;
+}
+function keccakBuildRhoOffsets() {
+  const r = Array.from({ length: 5 }, () => new Array(5).fill(0));
+  let x = 1, y = 0;
+  for (let t = 0; t < 24; t++) {
+    r[x][y] = ((t + 1) * (t + 2) / 2) % 64;
+    const newX = y, newY = (2 * x + 3 * y) % 5;
+    x = newX; y = newY;
+  }
+  return r;
+}
+const KECCAK_RHO = keccakBuildRhoOffsets();
+const KECCAK_RC = [
+  0x0000000000000001n, 0x0000000000008082n, 0x800000000000808An, 0x8000000080008000n,
+  0x000000000000808Bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+  0x000000000000008An, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000An,
+  0x000000008000808Bn, 0x800000000000008Bn, 0x8000000000008089n, 0x8000000000008003n,
+  0x8000000000008002n, 0x8000000000000080n, 0x000000000000800An, 0x800000008000000An,
+  0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n
+];
+function keccakF1600(state) {
+  for (let round = 0; round < 24; round++) {
+    const C = new Array(5);
+    for (let x = 0; x < 5; x++) C[x] = state[x][0] ^ state[x][1] ^ state[x][2] ^ state[x][3] ^ state[x][4];
+    const D = new Array(5);
+    for (let x = 0; x < 5; x++) D[x] = C[(x + 4) % 5] ^ keccakRotl64(C[(x + 1) % 5], 1);
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) state[x][y] ^= D[x];
+    const B = Array.from({ length: 5 }, () => new Array(5).fill(0n));
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        const newX = y, newY = (2 * x + 3 * y) % 5;
+        B[newX][newY] = keccakRotl64(state[x][y], KECCAK_RHO[x][y]);
+      }
+    }
+    for (let x = 0; x < 5; x++) {
+      for (let y = 0; y < 5; y++) {
+        state[x][y] = B[x][y] ^ ((~B[(x + 1) % 5][y]) & KECCAK_MASK64 & B[(x + 2) % 5][y]);
+      }
+    }
+    state[0][0] ^= KECCAK_RC[round];
+  }
+  return state;
+}
+function keccak256(messageBytes) {
+  const rateBytes = 136;
+  const state = Array.from({ length: 5 }, () => new Array(5).fill(0n));
+  const msgLen = messageBytes.length;
+  const numBlocks = Math.floor(msgLen / rateBytes) + 1;
+  const padded = new Uint8Array(numBlocks * rateBytes);
+  padded.set(messageBytes);
+  padded[msgLen] ^= 0x01;
+  padded[numBlocks * rateBytes - 1] ^= 0x80;
+  for (let block = 0; block < numBlocks; block++) {
+    const offset = block * rateBytes;
+    for (let i = 0; i < rateBytes / 8; i++) {
+      let lane = 0n;
+      for (let b = 7; b >= 0; b--) lane = (lane << 8n) | BigInt(padded[offset + i * 8 + b]);
+      const x = i % 5, y = Math.floor(i / 5);
+      state[x][y] ^= lane;
+    }
+    keccakF1600(state);
+  }
+  const out = new Uint8Array(32);
+  let outPos = 0;
+  outer:
+  for (let y = 0; y < 5; y++) {
+    for (let x = 0; x < 5; x++) {
+      let lane = state[x][y];
+      for (let b = 0; b < 8; b++) {
+        if (outPos >= 32) break outer;
+        out[outPos++] = Number(lane & 0xFFn);
+        lane >>= 8n;
+      }
+    }
+  }
+  return out;
+}
+
+/* ============================================================
+   secp256k1 (verified against two independently-sourced references)
+   and BIP-32 private-key-only derivation (CKDpriv).
+   ============================================================ */
+const SECP_P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2Fn;
+const SECP_N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141n;
+const SECP_G = {
+  x: 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798n,
+  y: 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8n
+};
+function secpMod(a, m) { const r = a % m; return r >= 0n ? r : r + m; }
+function secpModInverse(a, m) {
+  let [oldR, r] = [((a % m) + m) % m, m];
+  let [oldS, s] = [1n, 0n];
+  while (r !== 0n) {
+    const q = oldR / r;
+    [oldR, r] = [r, oldR - q * r];
+    [oldS, s] = [s, oldS - q * s];
+  }
+  return ((oldS % m) + m) % m;
+}
+function secpPointAdd(p1, p2) {
+  if (p1 === null) return p2;
+  if (p2 === null) return p1;
+  if (p1.x === p2.x && ((p1.y + p2.y) % SECP_P + SECP_P) % SECP_P === 0n) return null;
+  let m;
+  if (p1.x === p2.x && p1.y === p2.y) {
+    m = secpMod((3n * p1.x * p1.x) * secpModInverse(2n * p1.y, SECP_P), SECP_P);
+  } else {
+    m = secpMod((p2.y - p1.y) * secpModInverse(p2.x - p1.x, SECP_P), SECP_P);
+  }
+  const x3 = secpMod(m * m - p1.x - p2.x, SECP_P);
+  const y3 = secpMod(m * (p1.x - x3) - p1.y, SECP_P);
+  return { x: x3, y: y3 };
+}
+function secpPointMultiply(k, point) {
+  k = secpMod(k, SECP_N);
+  let result = null, addend = point;
+  while (k > 0n) {
+    if (k & 1n) result = secpPointAdd(result, addend);
+    addend = secpPointAdd(addend, addend);
+    k >>= 1n;
+  }
+  return result;
+}
+function bytesToBigInt(bytes) {
+  let hex = '0x';
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+  return BigInt(hex);
+}
+function bigIntTo32Bytes(n) {
+  const hex = n.toString(16).padStart(64, '0');
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+function privateKeyToPublicKey(privKeyBytes) {
+  return secpPointMultiply(bytesToBigInt(privKeyBytes), SECP_G);
+}
+function serializeCompressedPubkey(pub) {
+  const prefix = (pub.y % 2n === 0n) ? 0x02 : 0x03;
+  return concatBytes(new Uint8Array([prefix]), bigIntTo32Bytes(pub.x));
+}
+function serializeUncompressedNoPrefix(pub) {
+  return concatBytes(bigIntTo32Bytes(pub.x), bigIntTo32Bytes(pub.y));
+}
+async function hmacSha512(keyBytes, msgBytes) {
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-512' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, msgBytes);
+  return new Uint8Array(sig);
+}
+function ser32(i) {
+  return new Uint8Array([(i >>> 24) & 0xff, (i >>> 16) & 0xff, (i >>> 8) & 0xff, i & 0xff]);
+}
+async function masterKeyFromSeed(seedBytes) {
+  const I = await hmacSha512(new TextEncoder().encode('Bitcoin seed'), seedBytes);
+  return { key: I.slice(0, 32), chainCode: I.slice(32, 64) };
+}
+async function CKDpriv(parent, index) {
+  const hardened = index >= 0x80000000;
+  let data;
+  if (hardened) {
+    data = concatBytes(new Uint8Array([0x00]), parent.key, ser32(index));
+  } else {
+    const pub = privateKeyToPublicKey(parent.key);
+    data = concatBytes(serializeCompressedPubkey(pub), ser32(index));
+  }
+  const I = await hmacSha512(parent.chainCode, data);
+  const IL = bytesToBigInt(I.slice(0, 32));
+  const IR = I.slice(32, 64);
+  const parentKeyInt = bytesToBigInt(parent.key);
+  const childKeyInt = secpMod(IL + parentKeyInt, SECP_N);
+  if (IL >= SECP_N || childKeyInt === 0n) throw new Error('invalid child key at this index (astronomically unlikely) \u2014 try a different account index');
+  return { key: bigIntTo32Bytes(childKeyInt), chainCode: IR };
+}
+async function deriveHDKeyFromSeed(seedBytes, pathIndices) {
+  let node = await masterKeyFromSeed(seedBytes);
+  for (const idx of pathIndices) node = await CKDpriv(node, idx);
+  return node;
+}
+function ethPathIndices(accountIndex) {
+  const H = 0x80000000;
+  return [44 + H, 60 + H, 0 + H, 0, accountIndex];
+}
+function toChecksumAddress(addressHexNoPrefix) {
+  const addr = addressHexNoPrefix.toLowerCase();
+  const hash = bytesToHex(keccak256(new TextEncoder().encode(addr)));
+  let out = '0x';
+  for (let i = 0; i < addr.length; i++) out += (parseInt(hash[i], 16) >= 8) ? addr[i].toUpperCase() : addr[i];
+  return out;
+}
+async function seedToEthAddress(seedBytes, accountIndex) {
+  const node = await deriveHDKeyFromSeed(seedBytes, ethPathIndices(accountIndex));
+  const pub = privateKeyToPublicKey(node.key);
+  const pubBytes = serializeUncompressedNoPrefix(pub);
+  const hash = keccak256(pubBytes);
+  const address = toChecksumAddress(bytesToHex(hash.slice(12)));
+  return { address, privateKeyHex: bytesToHex(node.key) };
+}
+
+/* ============================================================
+   RIPEMD-160 (needed for Bitcoin's hash160; not in Web Crypto).
+   Pure JS, 32-bit unsigned arithmetic. Verified against the
+   original author's own published test vectors.
+   ============================================================ */
+function rmdRol(x, n) { return ((x << n) | (x >>> (32 - n))) >>> 0; }
+const RMD_R_LEFT = [
+  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+  7,4,13,1,10,6,15,3,12,0,9,5,2,14,11,8,
+  3,10,14,4,9,15,8,1,2,7,0,6,13,11,5,12,
+  1,9,11,10,0,8,12,4,13,3,7,15,14,5,6,2,
+  4,0,5,9,7,12,2,10,14,1,3,8,11,6,15,13
+];
+const RMD_R_RIGHT = [
+  5,14,7,0,9,2,11,4,13,6,15,8,1,10,3,12,
+  6,11,3,7,0,13,5,10,14,15,8,12,4,9,1,2,
+  15,5,1,3,7,14,6,9,11,8,12,2,10,0,4,13,
+  8,6,4,1,3,11,15,0,5,12,2,13,9,7,10,14,
+  12,15,10,4,1,5,8,7,6,2,13,14,0,3,9,11
+];
+const RMD_S_LEFT = [
+  11,14,15,12,5,8,7,9,11,13,14,15,6,7,9,8,
+  7,6,8,13,11,9,7,15,7,12,15,9,11,7,13,12,
+  11,13,6,7,14,9,13,15,14,8,13,6,5,12,7,5,
+  11,12,14,15,14,15,9,8,9,14,5,6,8,6,5,12,
+  9,15,5,11,6,8,13,12,5,12,13,14,11,8,5,6
+];
+const RMD_S_RIGHT = [
+  8,9,9,11,13,15,15,5,7,7,8,11,14,14,12,6,
+  9,13,15,7,12,8,9,11,7,7,12,7,6,15,13,11,
+  9,7,15,11,8,6,6,14,12,13,5,14,13,13,7,5,
+  15,5,8,11,14,14,6,14,6,9,12,9,12,5,15,8,
+  8,5,12,9,12,5,14,6,8,13,6,5,15,13,11,11
+];
+const RMD_K_LEFT = [0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E];
+const RMD_K_RIGHT = [0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000];
+function rmdF(j, x, y, z) {
+  if (j < 16) return (x ^ y ^ z) >>> 0;
+  if (j < 32) return ((x & y) | (~x & z)) >>> 0;
+  if (j < 48) return ((x | (~y >>> 0)) ^ z) >>> 0;
+  if (j < 64) return ((x & z) | (y & ~z)) >>> 0;
+  return (x ^ (y | (~z >>> 0))) >>> 0;
+}
+function ripemd160(messageBytes) {
+  const msgLen = messageBytes.length;
+  const bitLen = BigInt(msgLen) * 8n;
+  const padLen = ((56 - (msgLen + 1) % 64) + 64) % 64;
+  const total = msgLen + 1 + padLen + 8;
+  const buf = new Uint8Array(total);
+  buf.set(messageBytes);
+  buf[msgLen] = 0x80;
+  for (let i = 0; i < 8; i++) buf[total - 8 + i] = Number((bitLen >> BigInt(8 * i)) & 0xFFn);
+
+  let h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+  const numBlocks = total / 64;
+  for (let block = 0; block < numBlocks; block++) {
+    const X = new Array(16);
+    for (let i = 0; i < 16; i++) {
+      const off = block * 64 + i * 4;
+      X[i] = (buf[off] | (buf[off + 1] << 8) | (buf[off + 2] << 16) | (buf[off + 3] << 24)) >>> 0;
+    }
+    let A = h0, B = h1, C = h2, D = h3, E = h4;
+    let Ap = h0, Bp = h1, Cp = h2, Dp = h3, Ep = h4;
+    for (let j = 0; j < 80; j++) {
+      const round = Math.floor(j / 16);
+      let T = (rmdRol((A + rmdF(j, B, C, D) + X[RMD_R_LEFT[j]] + RMD_K_LEFT[round]) >>> 0, RMD_S_LEFT[j]) + E) >>> 0;
+      A = E; E = D; D = rmdRol(C, 10); C = B; B = T;
+      const roundP = Math.floor(j / 16);
+      const fRightVal = rmdF(79 - j, Bp, Cp, Dp);
+      T = (rmdRol((Ap + fRightVal + X[RMD_R_RIGHT[j]] + RMD_K_RIGHT[roundP]) >>> 0, RMD_S_RIGHT[j]) + Ep) >>> 0;
+      Ap = Ep; Ep = Dp; Dp = rmdRol(Cp, 10); Cp = Bp; Bp = T;
+    }
+    const T = (h1 + C + Dp) >>> 0;
+    h1 = (h2 + D + Ep) >>> 0; h2 = (h3 + E + Ap) >>> 0; h3 = (h4 + A + Bp) >>> 0; h4 = (h0 + B + Cp) >>> 0; h0 = T;
+  }
+  const out = new Uint8Array(20);
+  const words = [h0, h1, h2, h3, h4];
+  for (let i = 0; i < 5; i++) {
+    out[i * 4] = words[i] & 0xff;
+    out[i * 4 + 1] = (words[i] >>> 8) & 0xff;
+    out[i * 4 + 2] = (words[i] >>> 16) & 0xff;
+    out[i * 4 + 3] = (words[i] >>> 24) & 0xff;
+  }
+  return out;
+}
+async function bitcoinHash160(bytes) {
+  const sha = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return ripemd160(sha);
+}
+
+/* ============================================================
+   Base58Check (legacy Bitcoin addresses and WIF private keys)
+   and Bech32 (native SegWit addresses). Verified against a real
+   on-chain address (all-zero hash160) and the official BIP-173
+   test vector respectively.
+   ============================================================ */
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function base58Encode(bytes) {
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) | BigInt(b);
+  let out = '';
+  while (n > 0n) {
+    const rem = n % 58n;
+    n = n / 58n;
+    out = BASE58_ALPHABET[Number(rem)] + out;
+  }
+  for (let i = 0; i < bytes.length && bytes[i] === 0; i++) out = '1' + out;
+  return out;
+}
+async function base58CheckEncode(versionByte, payload) {
+  const versioned = concatBytes(new Uint8Array([versionByte]), payload);
+  const checksum1 = new Uint8Array(await crypto.subtle.digest('SHA-256', versioned));
+  const checksum2 = new Uint8Array(await crypto.subtle.digest('SHA-256', checksum1));
+  return base58Encode(concatBytes(versioned, checksum2.slice(0, 4)));
+}
+
+const BECH32_CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+const BECH32_GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+function bech32Polymod(values) {
+  let chk = 1;
+  for (const v of values) {
+    const b = chk >>> 25;
+    chk = ((chk & 0x1ffffff) << 5) ^ v;
+    for (let i = 0; i < 5; i++) if ((b >>> i) & 1) chk ^= BECH32_GEN[i];
+  }
+  return chk >>> 0;
+}
+function bech32HrpExpand(hrp) {
+  const out = [];
+  for (const c of hrp) out.push(c.charCodeAt(0) >> 5);
+  out.push(0);
+  for (const c of hrp) out.push(c.charCodeAt(0) & 31);
+  return out;
+}
+function bech32CreateChecksum(hrp, data) {
+  const values = bech32HrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]);
+  const mod = bech32Polymod(values) ^ 1;
+  const out = [];
+  for (let i = 0; i < 6; i++) out.push((mod >>> (5 * (5 - i))) & 31);
+  return out;
+}
+function convertBits(data, fromBits, toBits, pad) {
+  let acc = 0, bits = 0;
+  const out = [];
+  const maxv = (1 << toBits) - 1;
+  for (const value of data) {
+    acc = (acc << fromBits) | value;
+    bits += fromBits;
+    while (bits >= toBits) { bits -= toBits; out.push((acc >> bits) & maxv); }
+  }
+  if (pad && bits > 0) out.push((acc << (toBits - bits)) & maxv);
+  return out;
+}
+function bech32Encode(hrp, witnessVersion, witnessProgram) {
+  const data = [witnessVersion].concat(convertBits(Array.from(witnessProgram), 8, 5, true));
+  const checksum = bech32CreateChecksum(hrp, data);
+  return hrp + '1' + data.concat(checksum).map(d => BECH32_CHARSET[d]).join('');
+}
+
+function btcPathIndices(purpose, accountIndex) {
+  const H = 0x80000000;
+  return [purpose + H, 0 + H, 0 + H, 0, accountIndex]; // coin_type 0 = Bitcoin mainnet
+}
+async function seedToBtcAddress(seedBytes, accountIndex, addressType) {
+  const purpose = addressType === 'legacy' ? 44 : 84;
+  const node = await deriveHDKeyFromSeed(seedBytes, btcPathIndices(purpose, accountIndex));
+  const pub = privateKeyToPublicKey(node.key);
+  const pubComp = serializeCompressedPubkey(pub);
+  const h160 = await bitcoinHash160(pubComp);
+  const address = addressType === 'legacy'
+    ? await base58CheckEncode(0x00, h160)
+    : bech32Encode('bc', 0, h160);
+  const wif = await base58CheckEncode(0x80, concatBytes(node.key, new Uint8Array([0x01])));
+  return { address, wif };
+}
+
+/* ============================================================
+   UI wiring
+   ============================================================ */
+const BIP39_INDEX = new Map(BIP39_WORDS.map((w, i) => [w, i]));
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // ---- disclaimer gate (shows every run; intentionally not persisted anywhere) ----
+  const disclaimerCheckbox = document.getElementById('disclaimer-checkbox');
+  const disclaimerContinue = document.getElementById('disclaimer-continue');
+  const disclaimerOverlay = document.getElementById('disclaimer-overlay');
+  disclaimerCheckbox.addEventListener('change', () => {
+    disclaimerContinue.disabled = !disclaimerCheckbox.checked;
+  });
+  disclaimerContinue.addEventListener('click', () => {
+    if (!disclaimerCheckbox.checked) return;
+    document.body.classList.remove('disclaimer-pending');
+    disclaimerOverlay.remove();
+  });
+
+  // ---- passphrase reveal toggles (hidden by default, like the words) ----
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.getAttribute('data-pw-toggle'));
+      if (!input) return;
+      const revealed = input.type === 'text';
+      input.type = revealed ? 'password' : 'text';
+      btn.textContent = revealed ? 'Show' : 'Hide';
+    });
+  });
+
+  // ---- tabs ----
+  const tabButtons = document.querySelectorAll('nav.tabs button');
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('section.pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pane-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function cleanDice(str) { return (str || '').replace(/[^1-6]/g, ''); }
+
+  const bip39DiceInput = document.getElementById('bip39-dice');
+  bip39DiceInput.addEventListener('input', () => {
+    const n = cleanDice(bip39DiceInput.value).length;
+    document.getElementById('bip39-dice-info').textContent = n + ' valid die rolls entered' + (n > 0 && n < 50 ? ' (50+ recommended if using dice as your only source of trust)' : '');
+  });
+
+  // ---- word grid rendering with hide-by-default ----
+  function renderWordGrid(container, words, revealed) {
+    container.innerHTML = '';
+    words.forEach((w, i) => {
+      const el = document.createElement('div');
+      el.className = 'w' + (revealed ? '' : ' masked');
+      el.innerHTML = '<span class="i">' + (i + 1) + '.</span><span>' + (revealed ? w : '\u2022\u2022\u2022\u2022\u2022') + '</span>';
+      container.appendChild(el);
+    });
+  }
+
+  // ---- BIP-39 generate ----
+  let bip39Revealed = false;
+  document.getElementById('bip39-generate').addEventListener('click', async () => {
+    const btn = document.getElementById('bip39-generate');
+    btn.disabled = true;
+    try {
+      const bits = parseInt(document.getElementById('bip39-strength').value, 10);
+      const byteLength = bits / 8;
+      const dice = cleanDice(bip39DiceInput.value);
+      const entropy = await combinedEntropy(byteLength, dice);
+      const words = await bip39EntropyToMnemonic(entropy);
+
+      bip39Revealed = false;
+      const grid = document.getElementById('bip39-words');
+      renderWordGrid(grid, words, bip39Revealed);
+      const toggleBtn = document.getElementById('bip39-reveal-toggle');
+      toggleBtn.textContent = 'Reveal words';
+
+      const check = await bip39ValidateMnemonic(words);
+      const banner = document.getElementById('bip39-selfcheck');
+      banner.className = 'banner ' + (check.valid ? 'ok' : 'warn');
+      banner.innerHTML = check.valid
+        ? '<span class="icon">\u2713</span><span>Self-check passed: the checksum of this phrase verifies correctly.</span>'
+        : '<span class="icon">\u2715</span><span>Self-check FAILED (' + check.reason + ') \u2014 please report this, and do not use this phrase.</span>';
+
+      document.getElementById('bip39-result').style.display = 'block';
+      document.getElementById('bip39-eth-card').style.display = 'block';
+      document.getElementById('bip39-eth-result').innerHTML = '';
+      document.getElementById('bip39-btc-card').style.display = 'block';
+      document.getElementById('bip39-btc-result').innerHTML = '';
+      window.__lastBip39Words = words;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('bip39-reveal-toggle').addEventListener('click', () => {
+    if (!window.__lastBip39Words) return;
+    bip39Revealed = !bip39Revealed;
+    renderWordGrid(document.getElementById('bip39-words'), window.__lastBip39Words, bip39Revealed);
+    document.getElementById('bip39-reveal-toggle').textContent = bip39Revealed ? 'Hide words' : 'Reveal words';
+  });
+
+  async function renderEthResult(container, seedBytes, indexStr) {
+    const index = parseInt(indexStr, 10);
+    if (!Number.isInteger(index) || index < 0) { container.innerHTML = '<div class="banner warn"><span class="icon">\u2715</span><span>Account index must be a whole number \u2265 0.</span></div>'; return; }
+    const { address, privateKeyHex } = await seedToEthAddress(seedBytes, index);
+    container.innerHTML =
+      '<div class="banner ok"><span class="icon">\u2713</span><span>Ethereum (EVM) address (index ' + index + '): <code class="inline">' + address + '</code></span>' +
+      '<button class="btn secondary small" style="margin-left:auto;flex-shrink:0;" data-copy-address="' + address + '">Copy address</button></div>' +
+      '<details style="margin-top:6px;"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;">Show private key (sensitive \u2014 no copy button, by design)</summary>' +
+      '<div class="mnemonic-text" style="margin-top:6px;">0x' + privateKeyHex + '</div></details>';
+    const copyBtn = container.querySelector('[data-copy-address]');
+    if (copyBtn) copyBtn.addEventListener('click', () => navigator.clipboard.writeText(copyBtn.getAttribute('data-copy-address')));
+  }
+
+  document.getElementById('bip39-eth-derive').addEventListener('click', async () => {
+    const out = document.getElementById('bip39-eth-result');
+    if (!window.__lastBip39Words) return;
+    try {
+      const passphrase = document.getElementById('bip39-passphrase').value || '';
+      const seed = await bip39MnemonicToSeed(window.__lastBip39Words, passphrase);
+      await renderEthResult(out, seed, document.getElementById('bip39-eth-index').value);
+    } catch (err) {
+      out.innerHTML = '<div class="banner warn"><span class="icon">\u2715</span><span>' + err.message + '</span></div>';
+    }
+  });
+
+  async function renderBtcResult(container, seedBytes, indexStr, addressType) {
+    const index = parseInt(indexStr, 10);
+    if (!Number.isInteger(index) || index < 0) { container.innerHTML = '<div class="banner warn"><span class="icon">\u2715</span><span>Account index must be a whole number \u2265 0.</span></div>'; return; }
+    const { address, wif } = await seedToBtcAddress(seedBytes, index, addressType);
+    const typeLabel = addressType === 'legacy' ? 'Bitcoin Legacy' : 'Bitcoin Native SegWit';
+    container.innerHTML =
+      '<div class="banner ok"><span class="icon">\u2713</span><span>' + typeLabel + ' address (index ' + index + '): <code class="inline">' + address + '</code></span>' +
+      '<button class="btn secondary small" style="margin-left:auto;flex-shrink:0;" data-copy-address="' + address + '">Copy address</button></div>' +
+      '<details style="margin-top:6px;"><summary style="cursor:pointer;color:var(--muted);font-size:12.5px;">Show private key / WIF (sensitive \u2014 no copy button, by design)</summary>' +
+      '<div class="mnemonic-text" style="margin-top:6px;">' + wif + '</div></details>';
+    const copyBtn = container.querySelector('[data-copy-address]');
+    if (copyBtn) copyBtn.addEventListener('click', () => navigator.clipboard.writeText(copyBtn.getAttribute('data-copy-address')));
+  }
+
+  document.getElementById('bip39-btc-derive').addEventListener('click', async () => {
+    const out = document.getElementById('bip39-btc-result');
+    if (!window.__lastBip39Words) return;
+    try {
+      const passphrase = document.getElementById('bip39-passphrase').value || '';
+      const seed = await bip39MnemonicToSeed(window.__lastBip39Words, passphrase);
+      const addressType = document.getElementById('bip39-btc-type').value;
+      await renderBtcResult(out, seed, document.getElementById('bip39-btc-index').value, addressType);
+    } catch (err) {
+      out.innerHTML = '<div class="banner warn"><span class="icon">\u2715</span><span>' + err.message + '</span></div>';
+    }
+  });
+
+  // ---- Test / Verify ----
+  document.getElementById('test-bip39-btn').addEventListener('click', async () => {
+    const raw = document.getElementById('test-bip39-input').value.trim();
+    const words = raw.split(/\s+/).filter(Boolean).map(w => w.toLowerCase());
+    const out = document.getElementById('test-bip39-result');
+    const ethOut = document.getElementById('test-bip39-eth-result');
+    const btcOut = document.getElementById('test-bip39-btc-result');
+    ethOut.innerHTML = '';
+    btcOut.innerHTML = '';
+    if (words.length === 0) { out.innerHTML = ''; return; }
+    const res = await bip39ValidateMnemonic(words);
+    out.innerHTML = res.valid
+      ? '<div class="banner ok"><span class="icon">\u2713</span><span>Valid BIP-39 phrase (' + words.length + ' words). Checksum verifies correctly.</span></div>'
+      : '<div class="banner warn"><span class="icon">\u2715</span><span>Not a valid BIP-39 phrase: ' + res.reason + '</span></div>';
+    if (!res.valid) return;
+    try {
+      const passphrase = document.getElementById('test-bip39-passphrase').value || '';
+      const seed = await bip39MnemonicToSeed(words, passphrase);
+      const index = document.getElementById('test-bip39-eth-index').value;
+      await renderEthResult(ethOut, seed, index);
+      const btcType = document.getElementById('test-bip39-btc-type').value;
+      await renderBtcResult(btcOut, seed, index, btcType);
+    } catch (err) {
+      ethOut.innerHTML = '<div class="banner warn"><span class="icon">\u2715</span><span>' + err.message + '</span></div>';
+    }
+  });
+});
+})();
+
+</script>
+</body>
+</html>

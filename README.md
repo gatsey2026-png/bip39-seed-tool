@@ -1,0 +1,46 @@
+# BIP-39 Seed Tool
+
+A single-file, fully offline BIP-39 recovery phrase generator, with Ethereum
+(EVM) and Bitcoin address derivation. No build step, no external libraries,
+no CDNs, no network requests of any kind — everything (BIP-39, secp256k1,
+Keccak-256, RIPEMD-160, Base58Check, Bech32) is implemented from scratch in
+`index.html` and validated against official test vectors.
+
+**Live version:** `https://<your-username>.github.io/<repo-name>/`
+(replace with your actual GitHub Pages URL after enabling Pages — see below)
+
+## Using this safely
+
+This tool generates real cryptocurrency seed phrases. For anything beyond
+testing/curiosity:
+
+- **Download `index.html` and open it locally** (double-click it, or drag it
+  into a browser tab) rather than relying on the hosted version. That way
+  nothing about your session depends on GitHub's availability or the
+  integrity of the network path to it.
+- Consider disconnecting from the internet after the page loads — it never
+  needs to make a request, so this changes nothing about how it works.
+- Read the "About & Security Notes" tab in the tool itself before using it
+  for anything real.
+- This repo, like the tool's own disclaimer, comes with **no warranty of
+  any kind** — see the disclaimer shown every time the tool runs.
+
+## Deploying your own copy via GitHub Pages
+
+1. Push this repo to GitHub (public repo — required for free GitHub Pages
+   unless you have GitHub Pro/Team/Enterprise).
+2. In the repo, go to **Settings → Pages**.
+3. Under **Build and deployment → Source**, choose **Deploy from a branch**.
+4. Under **Branch**, choose `main` and `/ (root)`, then **Save**.
+5. Wait a minute or two — your live URL will appear at the top of that same
+   Pages settings screen, in the form
+   `https://<your-username>.github.io/<repo-name>/`.
+
+No GitHub Actions workflow is needed — this is a single static HTML file,
+so GitHub serves it directly.
+
+## Updating the live version later
+
+Just replace `index.html` with a new version and push — GitHub Pages
+redeploys automatically within a minute or two of any push to the
+configured branch.
