@@ -7,7 +7,7 @@ Keccak-256, RIPEMD-160, Base58Check, Bech32) is implemented from scratch in
 `index.html` and validated against official test vectors.
 
 **Live version:** 
-
+https://github.com/gatsey2026-png/bip39-seed-tool
 
 ## Using this safely
 
@@ -36,11 +36,3 @@ testing/curiosity:
    Pages settings screen, in the form
    
 
-No GitHub Actions workflow is needed — this is a single static HTML file,
-so GitHub serves it directly.
-
-## Updating the live version later
-
-Just replace `index.html` with a new version and push — GitHub Pages
-redeploys automatically within a minute or two of any push to the
-configured branch.
