@@ -6,9 +6,6 @@ no CDNs, no network requests of any kind — everything (BIP-39, secp256k1,
 Keccak-256, RIPEMD-160, Base58Check, Bech32) is implemented from scratch in
 `index.html` and validated against official test vectors.
 
-**Live version:** 
-https://gatsey2026-png.github.io/bip39-seed-tool/
-
 ## Using this safely
 
 This tool generates real cryptocurrency seed phrases. For anything beyond
