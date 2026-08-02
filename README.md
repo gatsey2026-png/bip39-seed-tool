@@ -35,4 +35,7 @@ testing/curiosity:
 5. Wait a minute or two — your live URL will appear at the top of that same
    Pages settings screen, in the form
    
+Randomness source
+This phrase is generated using your browser's built-in crypto.getRandomValues() — a cryptographically secure pseudorandom number generator (CSPRNG) provided by your operating system. It's the same class of random number generator that underlies HTTPS/TLS security across the web, and is a well-audited, standard source suitable for generating cryptocurrency keys.
+
 
